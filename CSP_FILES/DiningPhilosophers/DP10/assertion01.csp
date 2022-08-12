@@ -1,0 +1,56 @@
+include "arquivo_protocolo0.csp" 
+
+assert InBufferProt_processcomp_com_fork_right_5_phil_left_7( fork_right.5 ) :[deterministic [F]] 
+assert InBufferProt_processcomp_com_phil_left_7_fork_right_5( phil_left.7 ) :[deterministic [F]] 
+  
+InBufferProt_processcomp_com_fork_right_5_phil_left_7(c) = CIO(PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7[[ x  <- in, y <- out | x  <- inputs_PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7, y  <-outputs_PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7]]) 
+ InBufferProt_processcomp_com_phil_left_7_fork_right_5(c) = CIO(PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5[[ x  <- in, y <- out | x  <- inputs_PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5, y  <-outputs_PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5]]) 
+ inputs_PROT_IMP_processcomp_com(c) = inter( inputs_all ,{|c|}) 
+outputs_PROT_IMP_processcomp_com(c) = inter( outputs_all,{|c|}) 
+ 
+inputs_PROT_IMP_processcomp_com_fork_right_5 =  inputs_PROT_IMP_processcomp_com(fork_right.5 )  
+inputs_PROT_IMP_processcomp_com_phil_left_7 =  inputs_PROT_IMP_processcomp_com(phil_left.7 )  
+ 
+PROT_IMP_R_processcomp_com_fork_right_5= rename(PROT_IMP_processcomp_com_fork_right_5 , R_IO_processcomp_com(fork_right.5,phil_left.7)) 
+PROT_IMP_R_processcomp_com_phil_left_7= rename(PROT_IMP_processcomp_com_phil_left_7 , R_IO_processcomp_com(phil_left.7,fork_right.5)) 
+R_IO_processcomp_com(a, b) = seq({(a.x, b.x) | x <- extensions(a), member(a.x, outputs_all )}) 
+inputs_R_IO_processcomp_com(a,b) = inputs_all
+outputs_R_IO_processcomp_com(a,b)  = { b.x | x <- extensions(a), member(a.x, outputs_all)} 
+inputs_R_IO_PROT_IMP_processcomp_com_fork_right_5(a,b)  = inputs_PROT_IMP_processcomp_com_fork_right_5
+inputs_R_IO_PROT_IMP_processcomp_com_phil_left_7(a,b)  = inputs_PROT_IMP_processcomp_com_phil_left_7
+ 
+outputs_PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7= outputs_R_IO_processcomp_com(fork_right.5,phil_left.7) 
+outputs_PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5= outputs_R_IO_processcomp_com(phil_left.7,fork_right.5) 
+ 
+inputs_PROT_IMP_R_processcomp_com(e,r) = replace(inputs_PROT_IMP_processcomp_com(e), r) 
+PROT_IMP_R_PROT_IMP_processcomp_com_fork_right_5_phil_left_7= rename(PROT_IMP_processcomp_com_fork_right_5, R_IO_processcomp_com(fork_right.5,phil_left.7)) 
+PROT_IMP_R_PROT_IMP_processcomp_com_phil_left_7_fork_right_5= rename(PROT_IMP_processcomp_com_phil_left_7, R_IO_processcomp_com(phil_left.7,fork_right.5)) 
+ 
+PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7= PROT_IMP_R_PROT_IMP_processcomp_com_fork_right_5_phil_left_7
+PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5= PROT_IMP_R_PROT_IMP_processcomp_com_phil_left_7_fork_right_5
+ 
+outputs_PROT_IMP_R_processcomp_com(e,r)   = replace(outputs_PROT_IMP_processcomp_com(e), r) 
+DUAL_PROT_IMP_R_PROT_IMP_processcomp_com_fork_right_5= rename(DUAL_PROT_IMP_processcomp_com_fork_right_5,R_IO_processcomp_com(fork_right.5,phil_left.7))
+DUAL_PROT_IMP_R_PROT_IMP_processcomp_com_phil_left_7= rename(DUAL_PROT_IMP_processcomp_com_phil_left_7,R_IO_processcomp_com(phil_left.7,fork_right.5))
+DUAL_PROT_IMP_processcomp_com_fork_right_5= DUAL_PROT_Fork_fork_right(fork_right.5) 
+DUAL_PROT_IMP_processcomp_com_phil_left_7= DUAL_PROT_Phil_phil_left(phil_left.7) 
+
+inputs_PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7= inputs_R_IO_PROT_IMP_processcomp_com_fork_right_5(fork_right.5,phil_left.7) 
+inputs_PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5= inputs_R_IO_PROT_IMP_processcomp_com_phil_left_7(phil_left.7,fork_right.5) 
+PROT_IMP_processcomp_com_fork_right_5= protocolo_Fork_fork_right(fork_right.5) 
+PROT_IMP_processcomp_com_phil_left_7= protocolo_Phil_phil_left(phil_left.7) 
+DUAL_PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7 = DUAL_PROT_IMP_R_PROT_IMP_processcomp_com_fork_right_5
+DUAL_PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5= DUAL_PROT_IMP_R_PROT_IMP_processcomp_com_phil_left_7
+ 
+ --- assertion 2--------------- 
+ assert PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7:[deadlock free [FD]] 
+assert PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5:[deadlock free [FD]] 
+assert PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7[T= DUAL_PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7
+assert PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5[T= DUAL_PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5
+assert PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7\ outputs_PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7:[divergence free [FD]]
+assert PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5\ outputs_PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5:[divergence free [FD]]
+assert DUAL_PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7[T= PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7
+assert DUAL_PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5[T= PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5
+assert DUAL_PROT_IMP_R_IO_processcomp_com_fork_right_5_phil_left_7[F= protocolo_Phil_phil_left(phil_left.7)[phil_left.7<->fork_right.5]protocolo_Fork_fork_right(fork_right.5)
+assert DUAL_PROT_IMP_R_IO_processcomp_com_phil_left_7_fork_right_5[F= protocolo_Fork_fork_right(fork_right.5)[fork_right.5<->phil_left.7]protocolo_Phil_phil_left(phil_left.7)
+

@@ -1,0 +1,420 @@
+include "modelo0.csp" 
+
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil2,outputs_phil2) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil2:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil2:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil2 [F= RHS_InputDet_phil2
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil2 [F= RHS_OutputDec_A_phil2
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_Fork0,outputs_Fork0) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_Fork0:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert Fork0:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_Fork0 [F= RHS_InputDet_Fork0
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_Fork0 [F= RHS_OutputDec_A_Fork0
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork9,outputs_fork9) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork9:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork9:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork9 [F= RHS_InputDet_fork9
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork9 [F= RHS_OutputDec_A_fork9
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork10,outputs_fork10) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork10:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork10:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork10 [F= RHS_InputDet_fork10
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork10 [F= RHS_OutputDec_A_fork10
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork1,outputs_fork1) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork1:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork1:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork1 [F= RHS_InputDet_fork1
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork1 [F= RHS_OutputDec_A_fork1
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil5,outputs_phil5) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil5:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil5:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil5 [F= RHS_InputDet_phil5
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil5 [F= RHS_OutputDec_A_phil5
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil9,outputs_phil9) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil9:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil9:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil9 [F= RHS_InputDet_phil9
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil9 [F= RHS_OutputDec_A_phil9
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil8,outputs_phil8) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil8:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil8:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil8 [F= RHS_InputDet_phil8
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil8 [F= RHS_OutputDec_A_phil8
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork8,outputs_fork8) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork8:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork8:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork8 [F= RHS_InputDet_fork8
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork8 [F= RHS_OutputDec_A_fork8
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil7,outputs_phil7) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil7:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil7:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil7 [F= RHS_InputDet_phil7
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil7 [F= RHS_OutputDec_A_phil7
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork4,outputs_fork4) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork4:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork4:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork4 [F= RHS_InputDet_fork4
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork4 [F= RHS_OutputDec_A_fork4
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil6,outputs_phil6) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil6:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil6:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil6 [F= RHS_InputDet_phil6
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil6 [F= RHS_OutputDec_A_phil6
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_Phil0,outputs_Phil0) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_Phil0:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert Phil0:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_Phil0 [F= RHS_InputDet_Phil0
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_Phil0 [F= RHS_OutputDec_A_Phil0
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil1,outputs_phil1) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil1:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil1:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil1 [F= RHS_InputDet_phil1
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil1 [F= RHS_OutputDec_A_phil1
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil10,outputs_phil10) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil10:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil10:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil10 [F= RHS_InputDet_phil10
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil10 [F= RHS_OutputDec_A_phil10
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil3,outputs_phil3) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil3:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil3:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil3 [F= RHS_InputDet_phil3
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil3 [F= RHS_OutputDec_A_phil3
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork7,outputs_fork7) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork7:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork7:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork7 [F= RHS_InputDet_fork7
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork7 [F= RHS_OutputDec_A_fork7
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork6,outputs_fork6) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork6:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork6:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork6 [F= RHS_InputDet_fork6
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork6 [F= RHS_OutputDec_A_fork6
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork2,outputs_fork2) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork2:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork2:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork2 [F= RHS_InputDet_fork2
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork2 [F= RHS_OutputDec_A_fork2
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_phil4,outputs_phil4) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_phil4:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert phil4:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_phil4 [F= RHS_InputDet_phil4
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_phil4 [F= RHS_OutputDec_A_phil4
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork3,outputs_fork3) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork3:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork3:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork3 [F= RHS_InputDet_fork3
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork3 [F= RHS_OutputDec_A_fork3
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_fork5,outputs_fork5) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_fork5:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert fork5:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_fork5 [F= RHS_InputDet_fork5
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_fork5 [F= RHS_OutputDec_A_fork5
