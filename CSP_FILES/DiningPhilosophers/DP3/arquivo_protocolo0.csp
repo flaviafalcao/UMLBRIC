@@ -1,0 +1,74 @@
+include "modelo0.csp" 
+
+DUAL_PROT_Phil_phil_right(ch)  = dual_wb_protocolo_Phil_phil_right[[w <- ch]] 
+ protocolo_Phil_phil_right(ch)  = wb_protocolo_Phil_phil_right[[w <- ch]] 
+ 
+DUAL_PROT_Phil_phil_left(ch)  = dual_wb_protocolo_Phil_phil_left[[w <- ch]] 
+ protocolo_Phil_phil_left(ch)  = wb_protocolo_Phil_phil_left[[w <- ch]] 
+ 
+DUAL_PROT_Fork_fork_left(ch)  = dual_wb_protocolo_Fork_fork_left[[w <- ch]] 
+ protocolo_Fork_fork_left(ch)  = wb_protocolo_Fork_fork_left[[w <- ch]] 
+ 
+DUAL_PROT_Fork_fork_right(ch)  = dual_wb_protocolo_Fork_fork_right[[w <- ch]] 
+ protocolo_Fork_fork_right(ch)  = wb_protocolo_Fork_fork_right[[w <- ch]] 
+ 
+
+channel w : operation
+-------------------------------------------------------------------------------
+-- mapping an LTS to (traces) equivalent CSP process
+--------------------------------------------------------------------------------
+-- Let p = (Q, Li, Lo, T, q0) be an LTS(Li,Lo)
+available(q,T) = { ev | (q1,ev,q2)<-T, q1==q } 
+ next(q,e,T) = { q2 | (q1,ev,q2)<-T, q1==q, ev==e } 
+ M(q1,T) = [] ev : available(q1,T)  
+         @ ( [] q2 : next(q1,ev,T) @ ev -> M(q2,T) ) 
+ channel tau 
+MFDR(q1,T) = M(q1,T) \ {tau}  
+ -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------mapping an LTS to dual protocol ---------------------------------------------------
+MDUAL(q1,T) = |~| ev : available(q1,T)  
+         @ ( |~| q2 : next(q1,ev,T) @ ev -> MDUAL(q2,T) ) 
+ 
+MFDRDUAL(q1,T) = MDUAL(q1,T) \ {tau}  
+ 
+---------------------------------------------------------------
+wb_protocolo_Phil_phil_right= MFDR( 0,{(0,w.picksup_I,1),
+(1,w.picksup_O,2),
+(2,w.putsdown_I,3),
+(3,w.putsdown_O,0)}) 
+ 
+ dual_wb_protocolo_Phil_phil_right= MFDRDUAL( 0,{(0,w.picksup_I,1),
+(1,w.picksup_O,2),
+(2,w.putsdown_I,3),
+(3,w.putsdown_O,0)}) 
+ 
+ wb_protocolo_Phil_phil_left= MFDR( 0,{(0,w.picksup_I,1),
+(1,w.picksup_O,2),
+(2,w.putsdown_I,3),
+(3,w.putsdown_O,0)}) 
+ 
+ dual_wb_protocolo_Phil_phil_left= MFDRDUAL( 0,{(0,w.picksup_I,1),
+(1,w.picksup_O,2),
+(2,w.putsdown_I,3),
+(3,w.putsdown_O,0)}) 
+ 
+ wb_protocolo_Fork_fork_left= MFDR( 0,{(0,w.picksup_I,1),
+(1,w.picksup_O,2),
+(2,w.putsdown_I,3),
+(3,w.putsdown_O,0)}) 
+ 
+ dual_wb_protocolo_Fork_fork_left= MFDRDUAL( 0,{(0,w.picksup_I,1),
+(1,w.picksup_O,2),
+(2,w.putsdown_I,3),
+(3,w.putsdown_O,0)}) 
+ 
+ wb_protocolo_Fork_fork_right= MFDR( 0,{(0,w.picksup_I,1),
+(1,w.picksup_O,2),
+(2,w.putsdown_I,3),
+(3,w.putsdown_O,0)}) 
+ 
+ dual_wb_protocolo_Fork_fork_right= MFDRDUAL( 0,{(0,w.picksup_I,1),
+(1,w.picksup_O,2),
+(2,w.putsdown_I,3),
+(3,w.putsdown_O,0)}) 
+ 
+ 
