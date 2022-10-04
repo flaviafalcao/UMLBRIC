@@ -1,0 +1,132 @@
+---------------------------------------------------------
+-- Side Condition FUNCTIONS --
+---------------------------------------------------------
+
+events_phil15 = union(inputs_phil15,outputs_phil15)
+allInputs_phil15= Union({ inputs_phil15})
+allOutputs_phil15 = Union({ outputs_phil15})
+-- Filters inputs or outputs from a given set of events
+
+filter_phil15(inout,S) =
+	if inout == in then inter(allInputs_phil15,S) else inter(allOutputs_phil15,S)
+
+
+HideOutputs_phil15 = phil15 \ outputs_phil15
+HideInputs_phil15  = phil15 \ inputs_phil15
+HideAll_phil15 = phil15 \ union(outputs_phil15,inputs_phil15)
+CollapseOutputs_phil15 = phil15 [[ x <- o | x <- outputs_phil15 ]] \ allInputs_phil15
+
+-- Renaming I/O
+R_IO_phil15(a, b) = seq({(a.x, b.x) | x <- extensions(a), member(a.x, outputs_phil15)})
+inputs_R_IO_phil15(a,b)  = inputs_phil15
+outputs_R_IO_phil15(a,b) = { b.x | x <- extensions(a), member(a.x, outputs_phil15) }
+
+
+-- Protocol Implementation
+inputs_PROT_IMP_phil15(c)  = inter(inputs_phil15,{|c|})
+outputs_PROT_IMP_phil15(c) = inter(outputs_phil15,{|c|})
+
+-- Protocol Implementation and renaming
+PROT_IMP_R_phil15(r)   = rename(phil15,r) --modifidado por sarah
+inputs_PROT_IMP_R_phil15(e,r)   = replace(inputs_PROT_IMP_phil15(e), r)
+outputs_PROT_IMP_R_phil15(e,r)   = replace(outputs_PROT_IMP_phil15(e), r)
+
+--InBufferProt(P,c) =  CIO(P[[ c.in.x  <- i, c.out.y <- o | x  <- extensions(c.in), y  <- extensions(c.out)]])
+InBufferProt_phil15(c) =  CIO(phil15[[ x  <- in, y <- out | x  <- inputs_phil15, y  <- outputs_phil15]])
+
+-- Channels Projection
+PROJECTION_phil15(cs) = phil15 \ (diff(Events, Union({ {| c |} | c <- cs})))
+
+
+-- Protocol Implementation
+PROT_IMP_def_phil15(c) = phil15 \ (diff(Events, {|c|}))
+
+----assert ProtCheck(<PROCESS>,<CHANNEL>) :[deadlock free [FD]]
+----------------------------------------
+-- "... and nothing else matters..."
+----------------------------------------
+----assert <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) [T= <PROCESS>
+----assert <PROCESS> [T= <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) 
+
+----------------------------------------
+-- Input Determinism
+----------------------------------------
+Clunking_phil15 = phil15 [| AllButClunk |] Clunker
+RHS_InputDet_phil15 = (Clunking_phil15[|{clunk}|]Clunking_phil15) \ {clunk} [|AllButClunk|] Repeat
+
+LHS_InputDet_phil15 = Deterministic(inputs_phil15)
+
+--assert LHS_InputDet(<PROCESS>) [F= RHS_InputDet(<PROCESS>)
+
+-----------------
+-----------------
+
+----------------------------------------
+-- Strong output decisive
+----------------------------------------
+
+-- Roscoe's Strong output decisive
+SSET_phil15(c) = inter({|c|},outputs_phil15)
+F_phil15(c) = phil15 [| SSET_phil15(c) |] S(SSET_phil15(c)) 
+G_phil15(c) = phil15 [| SSET_phil15(c) |] CHAOS(SSET_phil15(c))
+--assert F(<PROCESS>,<CHANNEL>) [F= G(<PROCESS>,<CHANNEL>)
+
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+--PREVIOUS DEFINITIONS
+
+--One2Many(S) = 
+--    ([] x:diff(Events,union(S, {clunk})) @ x -> One2Many(S))
+--    [] ([] c:S @ [] x:{|c|} @ x -> One2Many'(S,c,x))
+--One2Many'(S,c,x) = [] y:{|c|} @ y -> if x==y then One2Many(S) else STOP
+--RHS_OutputDec_A_phil15 = 
+--    (Clunking_phil15[|diff(Events, outputs(P))|]Clunking_phil15) \ {clunk} 
+--    [| AllButClunk |] 
+--    One2Many(outputs_phil15)
+
+-- Definition above is sliglty wrong because One2Many'(S,c,x) enforces the following event to be a repetition 
+-- if the given c is not a channel bout the full event.
+
+--NEW DEFINITIONS
+
+One2Many_phil15 = 
+    ([] x:diff(Events,union(outputs_phil15, {clunk})) @ x -> One2Many_phil15)
+    [] ([] c:outputs_phil15 @ [] x:{|c|} @ x -> One2Many_phil15'(c,x))
+
+One2Many_phil15'(c,x) = [] y:chan_phil15(c) @ y -> if x==y then One2Many_phil15 else STOP
+
+RHS_OutputDec_A_phil15 = 
+    (Clunking_phil15[|diff(Events, outputs_phil15)|]Clunking_phil15) \ {clunk} 
+    [| AllButClunk |] 
+    One2Many_phil15
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+
+LHS_OutputDec_A_phil15 = 
+            STOP 
+            |~|
+            ([] x:diff(Events,union(outputs_phil15, {clunk})) @ x -> LHS_OutputDec_A_phil15)
+            [] 
+            ([] x:outputs_phil15 @ x -> (|~| y:chan_phil15(x) @ y -> LHS_OutputDec_A_phil15))
+
+
+----------------------------------------------------
+-- Part B. After trace s^<c.x> it might refuse all events on {|c|} \ {c.x}
+
+FirstCopy_phil15 = phil15 [| AllButClunk |] DoubleClunker
+SecondCopy_phil15 = phil15 [| AllButClunk |] clunk -> DoubleClunker
+
+LHS_OutputDec_B_phil15(c) = (FirstCopy_phil15[|{clunk}|]SecondCopy_phil15)\{clunk} [|Events|] LHS_Test(inter({|c|}, outputs_phil15))
+
+RHS_OutputDec_B_phil15(c) = (FirstCopy_phil15[|{clunk}|]SecondCopy_phil15)\{clunk} [|Events|] RHS_Test(inter({|c|}, outputs_phil15))
+
+-- Outputs events with same prefixing of a given output event
+chan_phil15(ev) = 
+    inter(outputs_phil15,
+          Union({ {| phil_right.14 | member (ev, {|phil_right.14|})|},
+{| phil_left.14 | member (ev, {|phil_left.14|})|} })
+)

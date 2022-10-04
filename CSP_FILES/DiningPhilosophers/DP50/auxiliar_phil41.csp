@@ -1,0 +1,132 @@
+---------------------------------------------------------
+-- Side Condition FUNCTIONS --
+---------------------------------------------------------
+
+events_phil41 = union(inputs_phil41,outputs_phil41)
+allInputs_phil41= Union({ inputs_phil41})
+allOutputs_phil41 = Union({ outputs_phil41})
+-- Filters inputs or outputs from a given set of events
+
+filter_phil41(inout,S) =
+	if inout == in then inter(allInputs_phil41,S) else inter(allOutputs_phil41,S)
+
+
+HideOutputs_phil41 = phil41 \ outputs_phil41
+HideInputs_phil41  = phil41 \ inputs_phil41
+HideAll_phil41 = phil41 \ union(outputs_phil41,inputs_phil41)
+CollapseOutputs_phil41 = phil41 [[ x <- o | x <- outputs_phil41 ]] \ allInputs_phil41
+
+-- Renaming I/O
+R_IO_phil41(a, b) = seq({(a.x, b.x) | x <- extensions(a), member(a.x, outputs_phil41)})
+inputs_R_IO_phil41(a,b)  = inputs_phil41
+outputs_R_IO_phil41(a,b) = { b.x | x <- extensions(a), member(a.x, outputs_phil41) }
+
+
+-- Protocol Implementation
+inputs_PROT_IMP_phil41(c)  = inter(inputs_phil41,{|c|})
+outputs_PROT_IMP_phil41(c) = inter(outputs_phil41,{|c|})
+
+-- Protocol Implementation and renaming
+PROT_IMP_R_phil41(r)   = rename(phil41,r) --modifidado por sarah
+inputs_PROT_IMP_R_phil41(e,r)   = replace(inputs_PROT_IMP_phil41(e), r)
+outputs_PROT_IMP_R_phil41(e,r)   = replace(outputs_PROT_IMP_phil41(e), r)
+
+--InBufferProt(P,c) =  CIO(P[[ c.in.x  <- i, c.out.y <- o | x  <- extensions(c.in), y  <- extensions(c.out)]])
+InBufferProt_phil41(c) =  CIO(phil41[[ x  <- in, y <- out | x  <- inputs_phil41, y  <- outputs_phil41]])
+
+-- Channels Projection
+PROJECTION_phil41(cs) = phil41 \ (diff(Events, Union({ {| c |} | c <- cs})))
+
+
+-- Protocol Implementation
+PROT_IMP_def_phil41(c) = phil41 \ (diff(Events, {|c|}))
+
+----assert ProtCheck(<PROCESS>,<CHANNEL>) :[deadlock free [FD]]
+----------------------------------------
+-- "... and nothing else matters..."
+----------------------------------------
+----assert <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) [T= <PROCESS>
+----assert <PROCESS> [T= <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) 
+
+----------------------------------------
+-- Input Determinism
+----------------------------------------
+Clunking_phil41 = phil41 [| AllButClunk |] Clunker
+RHS_InputDet_phil41 = (Clunking_phil41[|{clunk}|]Clunking_phil41) \ {clunk} [|AllButClunk|] Repeat
+
+LHS_InputDet_phil41 = Deterministic(inputs_phil41)
+
+--assert LHS_InputDet(<PROCESS>) [F= RHS_InputDet(<PROCESS>)
+
+-----------------
+-----------------
+
+----------------------------------------
+-- Strong output decisive
+----------------------------------------
+
+-- Roscoe's Strong output decisive
+SSET_phil41(c) = inter({|c|},outputs_phil41)
+F_phil41(c) = phil41 [| SSET_phil41(c) |] S(SSET_phil41(c)) 
+G_phil41(c) = phil41 [| SSET_phil41(c) |] CHAOS(SSET_phil41(c))
+--assert F(<PROCESS>,<CHANNEL>) [F= G(<PROCESS>,<CHANNEL>)
+
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+--PREVIOUS DEFINITIONS
+
+--One2Many(S) = 
+--    ([] x:diff(Events,union(S, {clunk})) @ x -> One2Many(S))
+--    [] ([] c:S @ [] x:{|c|} @ x -> One2Many'(S,c,x))
+--One2Many'(S,c,x) = [] y:{|c|} @ y -> if x==y then One2Many(S) else STOP
+--RHS_OutputDec_A_phil41 = 
+--    (Clunking_phil41[|diff(Events, outputs(P))|]Clunking_phil41) \ {clunk} 
+--    [| AllButClunk |] 
+--    One2Many(outputs_phil41)
+
+-- Definition above is sliglty wrong because One2Many'(S,c,x) enforces the following event to be a repetition 
+-- if the given c is not a channel bout the full event.
+
+--NEW DEFINITIONS
+
+One2Many_phil41 = 
+    ([] x:diff(Events,union(outputs_phil41, {clunk})) @ x -> One2Many_phil41)
+    [] ([] c:outputs_phil41 @ [] x:{|c|} @ x -> One2Many_phil41'(c,x))
+
+One2Many_phil41'(c,x) = [] y:chan_phil41(c) @ y -> if x==y then One2Many_phil41 else STOP
+
+RHS_OutputDec_A_phil41 = 
+    (Clunking_phil41[|diff(Events, outputs_phil41)|]Clunking_phil41) \ {clunk} 
+    [| AllButClunk |] 
+    One2Many_phil41
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+
+LHS_OutputDec_A_phil41 = 
+            STOP 
+            |~|
+            ([] x:diff(Events,union(outputs_phil41, {clunk})) @ x -> LHS_OutputDec_A_phil41)
+            [] 
+            ([] x:outputs_phil41 @ x -> (|~| y:chan_phil41(x) @ y -> LHS_OutputDec_A_phil41))
+
+
+----------------------------------------------------
+-- Part B. After trace s^<c.x> it might refuse all events on {|c|} \ {c.x}
+
+FirstCopy_phil41 = phil41 [| AllButClunk |] DoubleClunker
+SecondCopy_phil41 = phil41 [| AllButClunk |] clunk -> DoubleClunker
+
+LHS_OutputDec_B_phil41(c) = (FirstCopy_phil41[|{clunk}|]SecondCopy_phil41)\{clunk} [|Events|] LHS_Test(inter({|c|}, outputs_phil41))
+
+RHS_OutputDec_B_phil41(c) = (FirstCopy_phil41[|{clunk}|]SecondCopy_phil41)\{clunk} [|Events|] RHS_Test(inter({|c|}, outputs_phil41))
+
+-- Outputs events with same prefixing of a given output event
+chan_phil41(ev) = 
+    inter(outputs_phil41,
+          Union({ {| phil_right.41 | member (ev, {|phil_right.41|})|},
+{| phil_left.41 | member (ev, {|phil_left.41|})|} })
+)

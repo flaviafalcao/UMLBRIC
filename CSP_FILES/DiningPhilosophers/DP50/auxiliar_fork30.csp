@@ -1,0 +1,132 @@
+---------------------------------------------------------
+-- Side Condition FUNCTIONS --
+---------------------------------------------------------
+
+events_fork30 = union(inputs_fork30,outputs_fork30)
+allInputs_fork30= Union({ inputs_fork30})
+allOutputs_fork30 = Union({ outputs_fork30})
+-- Filters inputs or outputs from a given set of events
+
+filter_fork30(inout,S) =
+	if inout == in then inter(allInputs_fork30,S) else inter(allOutputs_fork30,S)
+
+
+HideOutputs_fork30 = fork30 \ outputs_fork30
+HideInputs_fork30  = fork30 \ inputs_fork30
+HideAll_fork30 = fork30 \ union(outputs_fork30,inputs_fork30)
+CollapseOutputs_fork30 = fork30 [[ x <- o | x <- outputs_fork30 ]] \ allInputs_fork30
+
+-- Renaming I/O
+R_IO_fork30(a, b) = seq({(a.x, b.x) | x <- extensions(a), member(a.x, outputs_fork30)})
+inputs_R_IO_fork30(a,b)  = inputs_fork30
+outputs_R_IO_fork30(a,b) = { b.x | x <- extensions(a), member(a.x, outputs_fork30) }
+
+
+-- Protocol Implementation
+inputs_PROT_IMP_fork30(c)  = inter(inputs_fork30,{|c|})
+outputs_PROT_IMP_fork30(c) = inter(outputs_fork30,{|c|})
+
+-- Protocol Implementation and renaming
+PROT_IMP_R_fork30(r)   = rename(fork30,r) --modifidado por sarah
+inputs_PROT_IMP_R_fork30(e,r)   = replace(inputs_PROT_IMP_fork30(e), r)
+outputs_PROT_IMP_R_fork30(e,r)   = replace(outputs_PROT_IMP_fork30(e), r)
+
+--InBufferProt(P,c) =  CIO(P[[ c.in.x  <- i, c.out.y <- o | x  <- extensions(c.in), y  <- extensions(c.out)]])
+InBufferProt_fork30(c) =  CIO(fork30[[ x  <- in, y <- out | x  <- inputs_fork30, y  <- outputs_fork30]])
+
+-- Channels Projection
+PROJECTION_fork30(cs) = fork30 \ (diff(Events, Union({ {| c |} | c <- cs})))
+
+
+-- Protocol Implementation
+PROT_IMP_def_fork30(c) = fork30 \ (diff(Events, {|c|}))
+
+----assert ProtCheck(<PROCESS>,<CHANNEL>) :[deadlock free [FD]]
+----------------------------------------
+-- "... and nothing else matters..."
+----------------------------------------
+----assert <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) [T= <PROCESS>
+----assert <PROCESS> [T= <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) 
+
+----------------------------------------
+-- Input Determinism
+----------------------------------------
+Clunking_fork30 = fork30 [| AllButClunk |] Clunker
+RHS_InputDet_fork30 = (Clunking_fork30[|{clunk}|]Clunking_fork30) \ {clunk} [|AllButClunk|] Repeat
+
+LHS_InputDet_fork30 = Deterministic(inputs_fork30)
+
+--assert LHS_InputDet(<PROCESS>) [F= RHS_InputDet(<PROCESS>)
+
+-----------------
+-----------------
+
+----------------------------------------
+-- Strong output decisive
+----------------------------------------
+
+-- Roscoe's Strong output decisive
+SSET_fork30(c) = inter({|c|},outputs_fork30)
+F_fork30(c) = fork30 [| SSET_fork30(c) |] S(SSET_fork30(c)) 
+G_fork30(c) = fork30 [| SSET_fork30(c) |] CHAOS(SSET_fork30(c))
+--assert F(<PROCESS>,<CHANNEL>) [F= G(<PROCESS>,<CHANNEL>)
+
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+--PREVIOUS DEFINITIONS
+
+--One2Many(S) = 
+--    ([] x:diff(Events,union(S, {clunk})) @ x -> One2Many(S))
+--    [] ([] c:S @ [] x:{|c|} @ x -> One2Many'(S,c,x))
+--One2Many'(S,c,x) = [] y:{|c|} @ y -> if x==y then One2Many(S) else STOP
+--RHS_OutputDec_A_fork30 = 
+--    (Clunking_fork30[|diff(Events, outputs(P))|]Clunking_fork30) \ {clunk} 
+--    [| AllButClunk |] 
+--    One2Many(outputs_fork30)
+
+-- Definition above is sliglty wrong because One2Many'(S,c,x) enforces the following event to be a repetition 
+-- if the given c is not a channel bout the full event.
+
+--NEW DEFINITIONS
+
+One2Many_fork30 = 
+    ([] x:diff(Events,union(outputs_fork30, {clunk})) @ x -> One2Many_fork30)
+    [] ([] c:outputs_fork30 @ [] x:{|c|} @ x -> One2Many_fork30'(c,x))
+
+One2Many_fork30'(c,x) = [] y:chan_fork30(c) @ y -> if x==y then One2Many_fork30 else STOP
+
+RHS_OutputDec_A_fork30 = 
+    (Clunking_fork30[|diff(Events, outputs_fork30)|]Clunking_fork30) \ {clunk} 
+    [| AllButClunk |] 
+    One2Many_fork30
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+
+LHS_OutputDec_A_fork30 = 
+            STOP 
+            |~|
+            ([] x:diff(Events,union(outputs_fork30, {clunk})) @ x -> LHS_OutputDec_A_fork30)
+            [] 
+            ([] x:outputs_fork30 @ x -> (|~| y:chan_fork30(x) @ y -> LHS_OutputDec_A_fork30))
+
+
+----------------------------------------------------
+-- Part B. After trace s^<c.x> it might refuse all events on {|c|} \ {c.x}
+
+FirstCopy_fork30 = fork30 [| AllButClunk |] DoubleClunker
+SecondCopy_fork30 = fork30 [| AllButClunk |] clunk -> DoubleClunker
+
+LHS_OutputDec_B_fork30(c) = (FirstCopy_fork30[|{clunk}|]SecondCopy_fork30)\{clunk} [|Events|] LHS_Test(inter({|c|}, outputs_fork30))
+
+RHS_OutputDec_B_fork30(c) = (FirstCopy_fork30[|{clunk}|]SecondCopy_fork30)\{clunk} [|Events|] RHS_Test(inter({|c|}, outputs_fork30))
+
+-- Outputs events with same prefixing of a given output event
+chan_fork30(ev) = 
+    inter(outputs_fork30,
+          Union({ {| fork_left.29 | member (ev, {|fork_left.29|})|},
+{| fork_right.29 | member (ev, {|fork_right.29|})|} })
+)

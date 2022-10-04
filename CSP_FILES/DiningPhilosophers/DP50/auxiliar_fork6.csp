@@ -1,0 +1,132 @@
+---------------------------------------------------------
+-- Side Condition FUNCTIONS --
+---------------------------------------------------------
+
+events_fork6 = union(inputs_fork6,outputs_fork6)
+allInputs_fork6= Union({ inputs_fork6})
+allOutputs_fork6 = Union({ outputs_fork6})
+-- Filters inputs or outputs from a given set of events
+
+filter_fork6(inout,S) =
+	if inout == in then inter(allInputs_fork6,S) else inter(allOutputs_fork6,S)
+
+
+HideOutputs_fork6 = fork6 \ outputs_fork6
+HideInputs_fork6  = fork6 \ inputs_fork6
+HideAll_fork6 = fork6 \ union(outputs_fork6,inputs_fork6)
+CollapseOutputs_fork6 = fork6 [[ x <- o | x <- outputs_fork6 ]] \ allInputs_fork6
+
+-- Renaming I/O
+R_IO_fork6(a, b) = seq({(a.x, b.x) | x <- extensions(a), member(a.x, outputs_fork6)})
+inputs_R_IO_fork6(a,b)  = inputs_fork6
+outputs_R_IO_fork6(a,b) = { b.x | x <- extensions(a), member(a.x, outputs_fork6) }
+
+
+-- Protocol Implementation
+inputs_PROT_IMP_fork6(c)  = inter(inputs_fork6,{|c|})
+outputs_PROT_IMP_fork6(c) = inter(outputs_fork6,{|c|})
+
+-- Protocol Implementation and renaming
+PROT_IMP_R_fork6(r)   = rename(fork6,r) --modifidado por sarah
+inputs_PROT_IMP_R_fork6(e,r)   = replace(inputs_PROT_IMP_fork6(e), r)
+outputs_PROT_IMP_R_fork6(e,r)   = replace(outputs_PROT_IMP_fork6(e), r)
+
+--InBufferProt(P,c) =  CIO(P[[ c.in.x  <- i, c.out.y <- o | x  <- extensions(c.in), y  <- extensions(c.out)]])
+InBufferProt_fork6(c) =  CIO(fork6[[ x  <- in, y <- out | x  <- inputs_fork6, y  <- outputs_fork6]])
+
+-- Channels Projection
+PROJECTION_fork6(cs) = fork6 \ (diff(Events, Union({ {| c |} | c <- cs})))
+
+
+-- Protocol Implementation
+PROT_IMP_def_fork6(c) = fork6 \ (diff(Events, {|c|}))
+
+----assert ProtCheck(<PROCESS>,<CHANNEL>) :[deadlock free [FD]]
+----------------------------------------
+-- "... and nothing else matters..."
+----------------------------------------
+----assert <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) [T= <PROCESS>
+----assert <PROCESS> [T= <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) 
+
+----------------------------------------
+-- Input Determinism
+----------------------------------------
+Clunking_fork6 = fork6 [| AllButClunk |] Clunker
+RHS_InputDet_fork6 = (Clunking_fork6[|{clunk}|]Clunking_fork6) \ {clunk} [|AllButClunk|] Repeat
+
+LHS_InputDet_fork6 = Deterministic(inputs_fork6)
+
+--assert LHS_InputDet(<PROCESS>) [F= RHS_InputDet(<PROCESS>)
+
+-----------------
+-----------------
+
+----------------------------------------
+-- Strong output decisive
+----------------------------------------
+
+-- Roscoe's Strong output decisive
+SSET_fork6(c) = inter({|c|},outputs_fork6)
+F_fork6(c) = fork6 [| SSET_fork6(c) |] S(SSET_fork6(c)) 
+G_fork6(c) = fork6 [| SSET_fork6(c) |] CHAOS(SSET_fork6(c))
+--assert F(<PROCESS>,<CHANNEL>) [F= G(<PROCESS>,<CHANNEL>)
+
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+--PREVIOUS DEFINITIONS
+
+--One2Many(S) = 
+--    ([] x:diff(Events,union(S, {clunk})) @ x -> One2Many(S))
+--    [] ([] c:S @ [] x:{|c|} @ x -> One2Many'(S,c,x))
+--One2Many'(S,c,x) = [] y:{|c|} @ y -> if x==y then One2Many(S) else STOP
+--RHS_OutputDec_A_fork6 = 
+--    (Clunking_fork6[|diff(Events, outputs(P))|]Clunking_fork6) \ {clunk} 
+--    [| AllButClunk |] 
+--    One2Many(outputs_fork6)
+
+-- Definition above is sliglty wrong because One2Many'(S,c,x) enforces the following event to be a repetition 
+-- if the given c is not a channel bout the full event.
+
+--NEW DEFINITIONS
+
+One2Many_fork6 = 
+    ([] x:diff(Events,union(outputs_fork6, {clunk})) @ x -> One2Many_fork6)
+    [] ([] c:outputs_fork6 @ [] x:{|c|} @ x -> One2Many_fork6'(c,x))
+
+One2Many_fork6'(c,x) = [] y:chan_fork6(c) @ y -> if x==y then One2Many_fork6 else STOP
+
+RHS_OutputDec_A_fork6 = 
+    (Clunking_fork6[|diff(Events, outputs_fork6)|]Clunking_fork6) \ {clunk} 
+    [| AllButClunk |] 
+    One2Many_fork6
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+
+LHS_OutputDec_A_fork6 = 
+            STOP 
+            |~|
+            ([] x:diff(Events,union(outputs_fork6, {clunk})) @ x -> LHS_OutputDec_A_fork6)
+            [] 
+            ([] x:outputs_fork6 @ x -> (|~| y:chan_fork6(x) @ y -> LHS_OutputDec_A_fork6))
+
+
+----------------------------------------------------
+-- Part B. After trace s^<c.x> it might refuse all events on {|c|} \ {c.x}
+
+FirstCopy_fork6 = fork6 [| AllButClunk |] DoubleClunker
+SecondCopy_fork6 = fork6 [| AllButClunk |] clunk -> DoubleClunker
+
+LHS_OutputDec_B_fork6(c) = (FirstCopy_fork6[|{clunk}|]SecondCopy_fork6)\{clunk} [|Events|] LHS_Test(inter({|c|}, outputs_fork6))
+
+RHS_OutputDec_B_fork6(c) = (FirstCopy_fork6[|{clunk}|]SecondCopy_fork6)\{clunk} [|Events|] RHS_Test(inter({|c|}, outputs_fork6))
+
+-- Outputs events with same prefixing of a given output event
+chan_fork6(ev) = 
+    inter(outputs_fork6,
+          Union({ {| fork_left.16 | member (ev, {|fork_left.16|})|},
+{| fork_right.16 | member (ev, {|fork_right.16|})|} })
+)

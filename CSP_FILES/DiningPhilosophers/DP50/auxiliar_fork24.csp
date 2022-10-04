@@ -1,0 +1,132 @@
+---------------------------------------------------------
+-- Side Condition FUNCTIONS --
+---------------------------------------------------------
+
+events_fork24 = union(inputs_fork24,outputs_fork24)
+allInputs_fork24= Union({ inputs_fork24})
+allOutputs_fork24 = Union({ outputs_fork24})
+-- Filters inputs or outputs from a given set of events
+
+filter_fork24(inout,S) =
+	if inout == in then inter(allInputs_fork24,S) else inter(allOutputs_fork24,S)
+
+
+HideOutputs_fork24 = fork24 \ outputs_fork24
+HideInputs_fork24  = fork24 \ inputs_fork24
+HideAll_fork24 = fork24 \ union(outputs_fork24,inputs_fork24)
+CollapseOutputs_fork24 = fork24 [[ x <- o | x <- outputs_fork24 ]] \ allInputs_fork24
+
+-- Renaming I/O
+R_IO_fork24(a, b) = seq({(a.x, b.x) | x <- extensions(a), member(a.x, outputs_fork24)})
+inputs_R_IO_fork24(a,b)  = inputs_fork24
+outputs_R_IO_fork24(a,b) = { b.x | x <- extensions(a), member(a.x, outputs_fork24) }
+
+
+-- Protocol Implementation
+inputs_PROT_IMP_fork24(c)  = inter(inputs_fork24,{|c|})
+outputs_PROT_IMP_fork24(c) = inter(outputs_fork24,{|c|})
+
+-- Protocol Implementation and renaming
+PROT_IMP_R_fork24(r)   = rename(fork24,r) --modifidado por sarah
+inputs_PROT_IMP_R_fork24(e,r)   = replace(inputs_PROT_IMP_fork24(e), r)
+outputs_PROT_IMP_R_fork24(e,r)   = replace(outputs_PROT_IMP_fork24(e), r)
+
+--InBufferProt(P,c) =  CIO(P[[ c.in.x  <- i, c.out.y <- o | x  <- extensions(c.in), y  <- extensions(c.out)]])
+InBufferProt_fork24(c) =  CIO(fork24[[ x  <- in, y <- out | x  <- inputs_fork24, y  <- outputs_fork24]])
+
+-- Channels Projection
+PROJECTION_fork24(cs) = fork24 \ (diff(Events, Union({ {| c |} | c <- cs})))
+
+
+-- Protocol Implementation
+PROT_IMP_def_fork24(c) = fork24 \ (diff(Events, {|c|}))
+
+----assert ProtCheck(<PROCESS>,<CHANNEL>) :[deadlock free [FD]]
+----------------------------------------
+-- "... and nothing else matters..."
+----------------------------------------
+----assert <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) [T= <PROCESS>
+----assert <PROCESS> [T= <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) 
+
+----------------------------------------
+-- Input Determinism
+----------------------------------------
+Clunking_fork24 = fork24 [| AllButClunk |] Clunker
+RHS_InputDet_fork24 = (Clunking_fork24[|{clunk}|]Clunking_fork24) \ {clunk} [|AllButClunk|] Repeat
+
+LHS_InputDet_fork24 = Deterministic(inputs_fork24)
+
+--assert LHS_InputDet(<PROCESS>) [F= RHS_InputDet(<PROCESS>)
+
+-----------------
+-----------------
+
+----------------------------------------
+-- Strong output decisive
+----------------------------------------
+
+-- Roscoe's Strong output decisive
+SSET_fork24(c) = inter({|c|},outputs_fork24)
+F_fork24(c) = fork24 [| SSET_fork24(c) |] S(SSET_fork24(c)) 
+G_fork24(c) = fork24 [| SSET_fork24(c) |] CHAOS(SSET_fork24(c))
+--assert F(<PROCESS>,<CHANNEL>) [F= G(<PROCESS>,<CHANNEL>)
+
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+--PREVIOUS DEFINITIONS
+
+--One2Many(S) = 
+--    ([] x:diff(Events,union(S, {clunk})) @ x -> One2Many(S))
+--    [] ([] c:S @ [] x:{|c|} @ x -> One2Many'(S,c,x))
+--One2Many'(S,c,x) = [] y:{|c|} @ y -> if x==y then One2Many(S) else STOP
+--RHS_OutputDec_A_fork24 = 
+--    (Clunking_fork24[|diff(Events, outputs(P))|]Clunking_fork24) \ {clunk} 
+--    [| AllButClunk |] 
+--    One2Many(outputs_fork24)
+
+-- Definition above is sliglty wrong because One2Many'(S,c,x) enforces the following event to be a repetition 
+-- if the given c is not a channel bout the full event.
+
+--NEW DEFINITIONS
+
+One2Many_fork24 = 
+    ([] x:diff(Events,union(outputs_fork24, {clunk})) @ x -> One2Many_fork24)
+    [] ([] c:outputs_fork24 @ [] x:{|c|} @ x -> One2Many_fork24'(c,x))
+
+One2Many_fork24'(c,x) = [] y:chan_fork24(c) @ y -> if x==y then One2Many_fork24 else STOP
+
+RHS_OutputDec_A_fork24 = 
+    (Clunking_fork24[|diff(Events, outputs_fork24)|]Clunking_fork24) \ {clunk} 
+    [| AllButClunk |] 
+    One2Many_fork24
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+
+LHS_OutputDec_A_fork24 = 
+            STOP 
+            |~|
+            ([] x:diff(Events,union(outputs_fork24, {clunk})) @ x -> LHS_OutputDec_A_fork24)
+            [] 
+            ([] x:outputs_fork24 @ x -> (|~| y:chan_fork24(x) @ y -> LHS_OutputDec_A_fork24))
+
+
+----------------------------------------------------
+-- Part B. After trace s^<c.x> it might refuse all events on {|c|} \ {c.x}
+
+FirstCopy_fork24 = fork24 [| AllButClunk |] DoubleClunker
+SecondCopy_fork24 = fork24 [| AllButClunk |] clunk -> DoubleClunker
+
+LHS_OutputDec_B_fork24(c) = (FirstCopy_fork24[|{clunk}|]SecondCopy_fork24)\{clunk} [|Events|] LHS_Test(inter({|c|}, outputs_fork24))
+
+RHS_OutputDec_B_fork24(c) = (FirstCopy_fork24[|{clunk}|]SecondCopy_fork24)\{clunk} [|Events|] RHS_Test(inter({|c|}, outputs_fork24))
+
+-- Outputs events with same prefixing of a given output event
+chan_fork24(ev) = 
+    inter(outputs_fork24,
+          Union({ {| fork_left.35 | member (ev, {|fork_left.35|})|},
+{| fork_right.35 | member (ev, {|fork_right.35|})|} })
+)
