@@ -1,0 +1,132 @@
+--------------------------------------------------------------------
+--------------------------------------------------------------------
+-- Function auxiliary operations 
+--------------------------------------------------------------------
+---------------------------------------------------------------------- Function is a set {(x1, y1),...,(xn, yn)}
+-- Transforms a singleton set into the element itself 
+pick({x}) = x 
+-- Returns the function return 
+-- Raises error if z is not in the domain of the function 
+apply(<(x,y)>^rs,z) = 
+	if x==z then y else apply(rs,z) 
+-- domain antirestriction 
+ddres(f,xs) = <(n,v) | (n,v) <- f, not member(n,xs)> 
+-- domain restriction 
+dres(f,xs) = <(n,v) | (n,v) <- f, member(n,xs)> 
+-- Overwrites the fuction 
+over(<>,n,v) = <> 
+over(<(x,y)>^rs,n,v) = 
+	if x==n then <(x,v)>^rs else <(x,y)>^over(rs,n,v) 
+-- Returns the domain of a relation 
+dom(f) = set(<n | (n,v) <- f>) 
+-- Returns the domain of a relation 
+ran(f) = set(<v | (n,v) <- f>) 
+-- Subset or equals 
+subseteq(S,T) = diff(S,T) == {} 
+---------------------------------------------------------
+-- Auxiliar Functions
+---------------------------------------------------------
+
+inc(x,n) = (x + 1) % n
+dec(x,n) = (x - 1) % n
+
+-- Rename channels in a process using a mapping < (old1, new1), ..., (oldn, newn)>
+
+rename(P, <>) = P
+rename(P, <(c1,c2)>^rs) = rename(P[[c1 <- c2]], rs)
+
+-- Replaces events in a set using the mapping < (old1, new1), ..., (oldn, newn)>
+
+replace_aux(oldc, newc, S) =
+	let other_events = {e | e <- S, not member(e, productions(oldc))}
+	    new_events   = {newc.v | v <- inter(extensions(newc), extensions(oldc)), member(oldc.v, S)}
+	within union (other_events, new_events)
+
+replace(S, <>) = S
+replace(S, <(c1,c2)>^rs) = replace(replace_aux(c1,c2,S),rs)
+
+-- Dual Protocol Implementation and renaming R_IO
+DUAL_PROT_IMP_R(P,r) = rename(P, r) --modifidado por sarah
+
+---------------------------------------------------------
+-- Side Condition PROCESSES --
+---------------------------------------------------------
+
+RUN(A) = [] x:A @ x -> RUN(A)
+CHAOS(A) = STOP |~| ([] x:A @ x -> CHAOS(A))
+
+-- Test if a given condition is met
+channel error
+ERROR = error -> SKIP
+Test(c) = not c & ERROR
+
+-- Used for testing protocols
+-- This is not used in the CSP framework, but will be used in the Circus/CML Framework
+channel out
+channel in
+channel mid
+channel o
+
+CP(a,b) = a -> b -> CP(a,b)
+C(a, P) = (P[[ a <- mid ]] [| {| mid |} |] CP(a,mid)) \ {|mid|}
+CIO(P) = C(in, C(out, P))
+
+LHS_Test(S) =
+    [] x:S @ 
+        x -> (x -> LHS_Test(S) [>
+                      ([] y:diff(S, {x}) @ y -> STOP)
+              )
+            [] ([] y:diff(Events,S) @ y -> y -> LHS_Test(S))
+RHS_Test(S) =
+    [] x:S @ 
+        x -> 
+            ( ([] y:S @ y -> if x==y then RHS_Test(S) else STOP) 
+              |~| STOP )
+            [] ([] y:diff(Events,S) @ y -> y -> RHS_Test(S))
+----------------------------------------
+-- Input Determinism
+----------------------------------------
+channel clunk
+AllButClunk = diff(Events, {clunk})
+Clunker = [] x:AllButClunk @ x -> clunk -> Clunker
+DoubleClunker = [] x:AllButClunk @ x -> clunk -> clunk -> DoubleClunker
+
+
+Repeat = [] x:AllButClunk @ x -> x -> Repeat
+
+
+COPY (LR) = [] x : dom(LR) @ x -> apply(LR,x) -> COPY (LR)
+BUFF_IO(BF, LR1, LR2) = (BF (LR1) ||| BF (LR2))
+BUFF_IO_1(LR1,LR2) = BUFF_IO(COPY, LR1, LR2)
+
+----------------------------------------
+-- These processes are only used when we have a optimization due to the use of architectural styles
+-- Client-Server Specification
+
+CS(c) = CS_CLIENT(c) [] CS_SERVER(c)
+CS_CLIENT(c) = c.in?v1 -> c.out?v2 -> CS_CLIENT(c)
+CS_SERVER(c) = c.out?v1 -> c.in?v2 -> CS_SERVER(c)
+
+----------------------------------------
+-- Protocol does not speak anything else
+----------------------------------------
+NOT(c) = diff(Events, {| c |})
+PRUNE(A) = [] ev: A @ ev -> STOP
+ProtCheck(P,c) = P [| NOT(c) |] PRUNE(NOT(c))
+-- Original Lazic`s Algorithm (adapted by Roscoe)
+LHS' = STOP |~| ([] x:AllButClunk @ x -> x -> LHS')
+
+-- Changed Lazic`s Algorithm (proposed by Roscoe) to consider only a particular set of events
+Deterministic(S) = 
+    STOP 
+    |~|     
+    ([] x:AllButClunk @ x -> (if member(x,S) 
+                        then x -> Deterministic(S)
+                        else (STOP |~| x -> Deterministic(S))))
+
+S(X)   = 
+	if (card(X) > 1) then
+		(|~| x:X @ [] y:diff(X, {x}) @ y -> S(X))
+	else 
+		(STOP |~| ([] x:X @ x -> S(X)))
+

@@ -1,0 +1,132 @@
+---------------------------------------------------------
+-- Side Condition FUNCTIONS --
+---------------------------------------------------------
+
+events_control01 = union(inputs_control01,outputs_control01)
+allInputs_control01= Union({ inputs_control01})
+allOutputs_control01 = Union({ outputs_control01})
+-- Filters inputs or outputs from a given set of events
+
+filter_control01(inout,S) =
+	if inout == in then inter(allInputs_control01,S) else inter(allOutputs_control01,S)
+
+
+HideOutputs_control01 = control01 \ outputs_control01
+HideInputs_control01  = control01 \ inputs_control01
+HideAll_control01 = control01 \ union(outputs_control01,inputs_control01)
+CollapseOutputs_control01 = control01 [[ x <- o | x <- outputs_control01 ]] \ allInputs_control01
+
+-- Renaming I/O
+R_IO_control01(a, b) = seq({(a.x, b.x) | x <- extensions(a), member(a.x, outputs_control01)})
+inputs_R_IO_control01(a,b)  = inputs_control01
+outputs_R_IO_control01(a,b) = { b.x | x <- extensions(a), member(a.x, outputs_control01) }
+
+
+-- Protocol Implementation
+inputs_PROT_IMP_control01(c)  = inter(inputs_control01,{|c|})
+outputs_PROT_IMP_control01(c) = inter(outputs_control01,{|c|})
+
+-- Protocol Implementation and renaming
+PROT_IMP_R_control01(r)   = rename(control01,r) --modifidado por sarah
+inputs_PROT_IMP_R_control01(e,r)   = replace(inputs_PROT_IMP_control01(e), r)
+outputs_PROT_IMP_R_control01(e,r)   = replace(outputs_PROT_IMP_control01(e), r)
+
+--InBufferProt(P,c) =  CIO(P[[ c.in.x  <- i, c.out.y <- o | x  <- extensions(c.in), y  <- extensions(c.out)]])
+InBufferProt_control01(c) =  CIO(control01[[ x  <- in, y <- out | x  <- inputs_control01, y  <- outputs_control01]])
+
+-- Channels Projection
+PROJECTION_control01(cs) = control01 \ (diff(Events, Union({ {| c |} | c <- cs})))
+
+
+-- Protocol Implementation
+PROT_IMP_def_control01(c) = control01 \ (diff(Events, {|c|}))
+
+----assert ProtCheck(<PROCESS>,<CHANNEL>) :[deadlock free [FD]]
+----------------------------------------
+-- "... and nothing else matters..."
+----------------------------------------
+----assert <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) [T= <PROCESS>
+----assert <PROCESS> [T= <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) 
+
+----------------------------------------
+-- Input Determinism
+----------------------------------------
+Clunking_control01 = control01 [| AllButClunk |] Clunker
+RHS_InputDet_control01 = (Clunking_control01[|{clunk}|]Clunking_control01) \ {clunk} [|AllButClunk|] Repeat
+
+LHS_InputDet_control01 = Deterministic(inputs_control01)
+
+--assert LHS_InputDet(<PROCESS>) [F= RHS_InputDet(<PROCESS>)
+
+-----------------
+-----------------
+
+----------------------------------------
+-- Strong output decisive
+----------------------------------------
+
+-- Roscoe's Strong output decisive
+SSET_control01(c) = inter({|c|},outputs_control01)
+F_control01(c) = control01 [| SSET_control01(c) |] S(SSET_control01(c)) 
+G_control01(c) = control01 [| SSET_control01(c) |] CHAOS(SSET_control01(c))
+--assert F(<PROCESS>,<CHANNEL>) [F= G(<PROCESS>,<CHANNEL>)
+
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+--PREVIOUS DEFINITIONS
+
+--One2Many(S) = 
+--    ([] x:diff(Events,union(S, {clunk})) @ x -> One2Many(S))
+--    [] ([] c:S @ [] x:{|c|} @ x -> One2Many'(S,c,x))
+--One2Many'(S,c,x) = [] y:{|c|} @ y -> if x==y then One2Many(S) else STOP
+--RHS_OutputDec_A_control01 = 
+--    (Clunking_control01[|diff(Events, outputs(P))|]Clunking_control01) \ {clunk} 
+--    [| AllButClunk |] 
+--    One2Many(outputs_control01)
+
+-- Definition above is sliglty wrong because One2Many'(S,c,x) enforces the following event to be a repetition 
+-- if the given c is not a channel bout the full event.
+
+--NEW DEFINITIONS
+
+One2Many_control01 = 
+    ([] x:diff(Events,union(outputs_control01, {clunk})) @ x -> One2Many_control01)
+    [] ([] c:outputs_control01 @ [] x:{|c|} @ x -> One2Many_control01'(c,x))
+
+One2Many_control01'(c,x) = [] y:chan_control01(c) @ y -> if x==y then One2Many_control01 else STOP
+
+RHS_OutputDec_A_control01 = 
+    (Clunking_control01[|diff(Events, outputs_control01)|]Clunking_control01) \ {clunk} 
+    [| AllButClunk |] 
+    One2Many_control01
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+
+LHS_OutputDec_A_control01 = 
+            STOP 
+            |~|
+            ([] x:diff(Events,union(outputs_control01, {clunk})) @ x -> LHS_OutputDec_A_control01)
+            [] 
+            ([] x:outputs_control01 @ x -> (|~| y:chan_control01(x) @ y -> LHS_OutputDec_A_control01))
+
+
+----------------------------------------------------
+-- Part B. After trace s^<c.x> it might refuse all events on {|c|} \ {c.x}
+
+FirstCopy_control01 = control01 [| AllButClunk |] DoubleClunker
+SecondCopy_control01 = control01 [| AllButClunk |] clunk -> DoubleClunker
+
+LHS_OutputDec_B_control01(c) = (FirstCopy_control01[|{clunk}|]SecondCopy_control01)\{clunk} [|Events|] LHS_Test(inter({|c|}, outputs_control01))
+
+RHS_OutputDec_B_control01(c) = (FirstCopy_control01[|{clunk}|]SecondCopy_control01)\{clunk} [|Events|] RHS_Test(inter({|c|}, outputs_control01))
+
+-- Outputs events with same prefixing of a given output event
+chan_control01(ev) = 
+    inter(outputs_control01,
+          Union({ {| port_control.1 | member (ev, {|port_control.1|})|},
+{| port_env.1 | member (ev, {|port_env.1|})|} })
+)

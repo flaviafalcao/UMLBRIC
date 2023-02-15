@@ -1,0 +1,131 @@
+---------------------------------------------------------
+-- Side Condition FUNCTIONS --
+---------------------------------------------------------
+
+events_cell01 = union(inputs_cell01,outputs_cell01)
+allInputs_cell01= Union({ inputs_cell01})
+allOutputs_cell01 = Union({ outputs_cell01})
+-- Filters inputs or outputs from a given set of events
+
+filter_cell01(inout,S) =
+	if inout == in then inter(allInputs_cell01,S) else inter(allOutputs_cell01,S)
+
+
+HideOutputs_cell01 = cell01 \ outputs_cell01
+HideInputs_cell01  = cell01 \ inputs_cell01
+HideAll_cell01 = cell01 \ union(outputs_cell01,inputs_cell01)
+CollapseOutputs_cell01 = cell01 [[ x <- o | x <- outputs_cell01 ]] \ allInputs_cell01
+
+-- Renaming I/O
+R_IO_cell01(a, b) = seq({(a.x, b.x) | x <- extensions(a), member(a.x, outputs_cell01)})
+inputs_R_IO_cell01(a,b)  = inputs_cell01
+outputs_R_IO_cell01(a,b) = { b.x | x <- extensions(a), member(a.x, outputs_cell01) }
+
+
+-- Protocol Implementation
+inputs_PROT_IMP_cell01(c)  = inter(inputs_cell01,{|c|})
+outputs_PROT_IMP_cell01(c) = inter(outputs_cell01,{|c|})
+
+-- Protocol Implementation and renaming
+PROT_IMP_R_cell01(r)   = rename(cell01,r) --modifidado por sarah
+inputs_PROT_IMP_R_cell01(e,r)   = replace(inputs_PROT_IMP_cell01(e), r)
+outputs_PROT_IMP_R_cell01(e,r)   = replace(outputs_PROT_IMP_cell01(e), r)
+
+--InBufferProt(P,c) =  CIO(P[[ c.in.x  <- i, c.out.y <- o | x  <- extensions(c.in), y  <- extensions(c.out)]])
+InBufferProt_cell01(c) =  CIO(cell01[[ x  <- in, y <- out | x  <- inputs_cell01, y  <- outputs_cell01]])
+
+-- Channels Projection
+PROJECTION_cell01(cs) = cell01 \ (diff(Events, Union({ {| c |} | c <- cs})))
+
+
+-- Protocol Implementation
+PROT_IMP_def_cell01(c) = cell01 \ (diff(Events, {|c|}))
+
+----assert ProtCheck(<PROCESS>,<CHANNEL>) :[deadlock free [FD]]
+----------------------------------------
+-- "... and nothing else matters..."
+----------------------------------------
+----assert <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) [T= <PROCESS>
+----assert <PROCESS> [T= <PROCESS> [| Events |] (<PROCESS> ||| RUN(NOT(<CHANNEL>))) 
+
+----------------------------------------
+-- Input Determinism
+----------------------------------------
+Clunking_cell01 = cell01 [| AllButClunk |] Clunker
+RHS_InputDet_cell01 = (Clunking_cell01[|{clunk}|]Clunking_cell01) \ {clunk} [|AllButClunk|] Repeat
+
+LHS_InputDet_cell01 = Deterministic(inputs_cell01)
+
+--assert LHS_InputDet(<PROCESS>) [F= RHS_InputDet(<PROCESS>)
+
+-----------------
+-----------------
+
+----------------------------------------
+-- Strong output decisive
+----------------------------------------
+
+-- Roscoe's Strong output decisive
+SSET_cell01(c) = inter({|c|},outputs_cell01)
+F_cell01(c) = cell01 [| SSET_cell01(c) |] S(SSET_cell01(c)) 
+G_cell01(c) = cell01 [| SSET_cell01(c) |] CHAOS(SSET_cell01(c))
+--assert F(<PROCESS>,<CHANNEL>) [F= G(<PROCESS>,<CHANNEL>)
+
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+--PREVIOUS DEFINITIONS
+
+--One2Many(S) = 
+--    ([] x:diff(Events,union(S, {clunk})) @ x -> One2Many(S))
+--    [] ([] c:S @ [] x:{|c|} @ x -> One2Many'(S,c,x))
+--One2Many'(S,c,x) = [] y:{|c|} @ y -> if x==y then One2Many(S) else STOP
+--RHS_OutputDec_A_cell01 = 
+--    (Clunking_cell01[|diff(Events, outputs(P))|]Clunking_cell01) \ {clunk} 
+--    [| AllButClunk |] 
+--    One2Many(outputs_cell01)
+
+-- Definition above is sliglty wrong because One2Many'(S,c,x) enforces the following event to be a repetition 
+-- if the given c is not a channel bout the full event.
+
+--NEW DEFINITIONS
+
+One2Many_cell01 = 
+    ([] x:diff(Events,union(outputs_cell01, {clunk})) @ x -> One2Many_cell01)
+    [] ([] c:outputs_cell01 @ [] x:{|c|} @ x -> One2Many_cell01'(c,x))
+
+One2Many_cell01'(c,x) = [] y:chan_cell01(c) @ y -> if x==y then One2Many_cell01 else STOP
+
+RHS_OutputDec_A_cell01 = 
+    (Clunking_cell01[|diff(Events, outputs_cell01)|]Clunking_cell01) \ {clunk} 
+    [| AllButClunk |] 
+    One2Many_cell01
+
+-----------------------------------------------------------------
+-----------------------------------------------------------------
+
+
+LHS_OutputDec_A_cell01 = 
+            STOP 
+            |~|
+            ([] x:diff(Events,union(outputs_cell01, {clunk})) @ x -> LHS_OutputDec_A_cell01)
+            [] 
+            ([] x:outputs_cell01 @ x -> (|~| y:chan_cell01(x) @ y -> LHS_OutputDec_A_cell01))
+
+
+----------------------------------------------------
+-- Part B. After trace s^<c.x> it might refuse all events on {|c|} \ {c.x}
+
+FirstCopy_cell01 = cell01 [| AllButClunk |] DoubleClunker
+SecondCopy_cell01 = cell01 [| AllButClunk |] clunk -> DoubleClunker
+
+LHS_OutputDec_B_cell01(c) = (FirstCopy_cell01[|{clunk}|]SecondCopy_cell01)\{clunk} [|Events|] LHS_Test(inter({|c|}, outputs_cell01))
+
+RHS_OutputDec_B_cell01(c) = (FirstCopy_cell01[|{clunk}|]SecondCopy_cell01)\{clunk} [|Events|] RHS_Test(inter({|c|}, outputs_cell01))
+
+-- Outputs events with same prefixing of a given output event
+chan_cell01(ev) = 
+    inter(outputs_cell01,
+          Union({ {| port_cell.1 | member (ev, {|port_cell.1|})|} })
+)
