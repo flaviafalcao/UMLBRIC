@@ -1,3 +1,2 @@
  
- include "modelo0.csp" 
  assert processcomp_com_com:[deadlock free [FD]] 
