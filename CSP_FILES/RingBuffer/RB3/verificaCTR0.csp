@@ -1,0 +1,116 @@
+include "modelo0.csp" 
+
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_CONTROL0,outputs_CONTROL0) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_CONTROL0:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert CONTROL0:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_CONTROL0 [F= RHS_InputDet_CONTROL0
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_CONTROL0 [F= RHS_OutputDec_A_CONTROL0
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_control01,outputs_control01) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_control01:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert control01:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_control01 [F= RHS_InputDet_control01
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_control01 [F= RHS_OutputDec_A_control01
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_cell01,outputs_cell01) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_cell01:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert cell01:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_cell01 [F= RHS_InputDet_cell01
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_cell01 [F= RHS_OutputDec_A_cell01
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_cell03,outputs_cell03) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_cell03:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert cell03:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_cell03 [F= RHS_InputDet_cell03
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_cell03 [F= RHS_OutputDec_A_cell03
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_cell02,outputs_cell02) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_cell02:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert cell02:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_cell02 [F= RHS_InputDet_cell02
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_cell02 [F= RHS_OutputDec_A_cell02
+--Condition A.2.1: Every channel in P is an I/O Channel
+assert not Test(inter(inputs_CELL0,outputs_CELL0) == {}) [T= ERROR
+ --Assertions:
+
+--Condition A.2: I/O Process 
+
+--Condition A.2.2: The contract has infinite set of traces
+assert not HideAll_CELL0:[divergence free [FD]]
+
+--Condition A.2.3:	The contract is divergence-free
+assert CELL0:[divergence free [FD]]
+
+--Condition A.2.4: The contract is input deterministic
+ --Nao ha escolha interna entre os eventos de entrada  
+ 
+assert LHS_InputDet_CELL0 [F= RHS_InputDet_CELL0
+
+--Condition A.2.5: The contract is strong output decisive
+assert LHS_OutputDec_A_CELL0 [F= RHS_OutputDec_A_CELL0

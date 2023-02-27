@@ -1,0 +1,110 @@
+include "modelo0.csp" 
+
+DUAL_PROT_CELL_port_cell(ch)  = dual_wb_protocolo_CELL_port_cell[[w <- ch]] 
+ protocolo_CELL_port_cell(ch)  = wb_protocolo_CELL_port_cell[[w <- ch]] 
+ 
+DUAL_PROT_CONTROL_port_control1(ch)  = dual_wb_protocolo_CONTROL_port_control1[[w <- ch]] 
+ protocolo_CONTROL_port_control1(ch)  = wb_protocolo_CONTROL_port_control1[[w <- ch]] 
+ 
+DUAL_PROT_CONTROL_port_control2(ch)  = dual_wb_protocolo_CONTROL_port_control2[[w <- ch]] 
+ protocolo_CONTROL_port_control2(ch)  = wb_protocolo_CONTROL_port_control2[[w <- ch]] 
+ 
+DUAL_PROT_CONTROL_port_control3(ch)  = dual_wb_protocolo_CONTROL_port_control3[[w <- ch]] 
+ protocolo_CONTROL_port_control3(ch)  = wb_protocolo_CONTROL_port_control3[[w <- ch]] 
+ 
+
+channel w : operation
+-------------------------------------------------------------------------------
+-- mapping an LTS to (traces) equivalent CSP process
+--------------------------------------------------------------------------------
+-- Let p = (Q, Li, Lo, T, q0) be an LTS(Li,Lo)
+available(q,T) = { ev | (q1,ev,q2)<-T, q1==q } 
+ next(q,e,T) = { q2 | (q1,ev,q2)<-T, q1==q, ev==e } 
+ M(q1,T) = [] ev : available(q1,T)  
+         @ ( [] q2 : next(q1,ev,T) @ ev -> M(q2,T) ) 
+ channel tau 
+MFDR(q1,T) = M(q1,T) \ {tau}  
+ -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------mapping an LTS to dual protocol ---------------------------------------------------
+MDUAL(q1,T) = |~| ev : available(q1,T)  
+         @ ( |~| q2 : next(q1,ev,T) @ ev -> MDUAL(q2,T) ) 
+ 
+MFDRDUAL(q1,T) = MDUAL(q1,T) \ {tau}  
+ 
+---------------------------------------------------------------
+wb_protocolo_CELL_port_cell= MFDR( 0,{(0,w.write_I.0,1),
+(1,w.write_O,0),
+(0,w.write_I.1,5),
+(5,w.write_O,4),
+(4,w.write_I.0,1),
+(4,w.write_I.1,5),
+(4,w.read_I,3),
+(3,w.read_O.1,4),
+(0,w.read_I,2),
+(2,w.read_O.0,0)}) 
+ 
+ dual_wb_protocolo_CELL_port_cell= MFDRDUAL( 0,{(0,w.write_I.0,1),
+(1,w.write_O,0),
+(0,w.write_I.1,5),
+(5,w.write_O,4),
+(4,w.write_I.0,1),
+(4,w.write_I.1,5),
+(4,w.read_I,3),
+(3,w.read_O.1,4),
+(0,w.read_I,2),
+(2,w.read_O.0,0)}) 
+ 
+ wb_protocolo_CONTROL_port_control1= MFDR( 1,{(1,tau,0),
+(0,w.write_I.0,3),
+(3,w.write_O,4),
+(4,w.read_I,5),
+(5,w.read_O.0,1),
+(5,w.read_O.1,1),
+(1,tau,2),
+(2,w.write_I.1,3)}) 
+ 
+ dual_wb_protocolo_CONTROL_port_control1= MFDRDUAL( 1,{(1,tau,0),
+(0,w.write_I.0,3),
+(3,w.write_O,4),
+(4,w.read_I,5),
+(5,w.read_O.0,1),
+(5,w.read_O.1,1),
+(1,tau,2),
+(2,w.write_I.1,3)}) 
+ 
+ wb_protocolo_CONTROL_port_control2= MFDR( 1,{(1,tau,0),
+(0,w.write_I.0,3),
+(3,w.write_O,4),
+(4,w.read_I,5),
+(5,w.read_O.0,1),
+(5,w.read_O.1,1),
+(1,tau,2),
+(2,w.write_I.1,3)}) 
+ 
+ dual_wb_protocolo_CONTROL_port_control2= MFDRDUAL( 1,{(1,tau,0),
+(0,w.write_I.0,3),
+(3,w.write_O,4),
+(4,w.read_I,5),
+(5,w.read_O.0,1),
+(5,w.read_O.1,1),
+(1,tau,2),
+(2,w.write_I.1,3)}) 
+ 
+ wb_protocolo_CONTROL_port_control3= MFDR( 1,{(1,tau,0),
+(0,w.write_I.0,3),
+(3,w.write_O,4),
+(4,w.read_I,5),
+(5,w.read_O.0,1),
+(5,w.read_O.1,1),
+(1,tau,2),
+(2,w.write_I.1,3)}) 
+ 
+ dual_wb_protocolo_CONTROL_port_control3= MFDRDUAL( 1,{(1,tau,0),
+(0,w.write_I.0,3),
+(3,w.write_O,4),
+(4,w.read_I,5),
+(5,w.read_O.0,1),
+(5,w.read_O.1,1),
+(1,tau,2),
+(2,w.write_I.1,3)}) 
+ 
+ 

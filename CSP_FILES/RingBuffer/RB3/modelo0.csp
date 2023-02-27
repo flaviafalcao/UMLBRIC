@@ -1,0 +1,220 @@
+-------------canais das portas-----------------
+ 
+ include "function_aux.csp" 
+--------------------canais set e gets--------------
+id_CONTROL = {0 ,1 }
+id_CELL = {0 ,1 ,2 ,3 }
+
+channel port_control : id_CONTROL.index.operation 
+index = {1..3} 
+channel port_env : id_CONTROL.t_id.operation 
+channel port_cell : id_CELL.operation 
+
+type_size={0..4}
+type_cache={0..1}
+type_top={1..3}
+type_bot={1..3}
+type_vl_env={0..1}
+maxring=3
+maxbuffer=4
+type_val={0..1}
+
+channel get_size : id_CONTROL.type_size
+channel set_size : id_CONTROL.type_size
+channel get_cache : id_CONTROL.type_cache
+channel set_cache : id_CONTROL.type_cache
+channel get_top : id_CONTROL.type_top
+channel set_top : id_CONTROL.type_top
+channel get_bot : id_CONTROL.type_bot
+channel set_bot : id_CONTROL.type_bot
+channel get_vl_env : id_CONTROL.type_vl_env
+channel set_vl_env : id_CONTROL.type_vl_env
+channel get_val : id_CELL.type_val
+channel set_val : id_CELL.type_val
+-----instancias teste-----------
+CONTROL0 =CONTROL(0) 
+CELL0 =CELL(0) 
+-----instancias real-----------
+cell01 = CELL(1) 
+cell03 = CELL(2) 
+cell02 = CELL(3) 
+control01 = CONTROL(1) 
+
+
+
+ 
+  --- CTR_CELL(id)= < CELL(id), {port_cell}, {receive_data_I , receive_data_O , retrieve_data_I , retrieve_data_O , write_I , write_O , read_I , read_O}, <(port_cell.id , {receive_data_I , receive_data_O , retrieve_data_I , retrieve_data_O , write_I , write_O , read_I , read_O}) > 
+  --- CTR_CONTROL(id)= < CONTROL(id), {port_control.id,port_env.id,}, {receive_data_I , receive_data_O , retrieve_data_I , retrieve_data_O , write_I , write_O , read_I , read_O}, <(port_control.id , {receive_data_I , receive_data_O , retrieve_data_I , retrieve_data_O , write_I , write_O , read_I , read_O})(port_env.id , {receive_data_I , receive_data_O , retrieve_data_I , retrieve_data_O , write_I , write_O , read_I , read_O}) > 
+datatype operation = retrieve_data_I | retrieve_data_O.type_vl_env | write_I.type_val | write_O | read_I | read_O.type_val| receive_data.type_vl_env
+subtype CELL_I = read_I | write_I.type_val
+subtype CONTROL_I = retrieve_data_I | read_I | write_I.type_val | receive_data.type_vl_env
+
+subtype CELL_O = read_O.type_val | write_O
+subtype CONTROL_O = retrieve_data_O.type_vl_env | read_O.type_val | write_O
+
+
+
+t_id = {0..7} 
+channel internal: t_id 
+
+
+CONTROL_state( id,size,cache,top,bot,vl_env) =get_size.id!size->CONTROL_state ( id, size,cache,top,bot,vl_env ) 
+ []get_cache.id!cache->CONTROL_state ( id, size,cache,top,bot,vl_env ) 
+ []get_top.id!top->CONTROL_state ( id, size,cache,top,bot,vl_env ) 
+ []get_bot.id!bot->CONTROL_state ( id, size,cache,top,bot,vl_env ) 
+ []get_vl_env.id!vl_env->CONTROL_state ( id, size,cache,top,bot,vl_env ) 
+ []set_size.id?vl -> CONTROL_state ( id, vl ,cache ,top ,bot ,vl_env) 
+  [] 
+set_cache.id?vl -> CONTROL_state ( id, size ,vl ,top ,bot ,vl_env) 
+  [] 
+set_top.id?vl -> CONTROL_state ( id, size ,cache ,vl ,bot ,vl_env) 
+  [] 
+set_bot.id?vl -> CONTROL_state ( id, size ,cache ,top ,vl ,vl_env) 
+  [] 
+set_vl_env.id?vl -> CONTROL_state ( id, size ,cache ,top ,bot ,vl) 
+[] 
+size>0 & port_env.id.1.retrieve_data_I -> CONTROL_state ( id, size,cache,top,bot,vl_env )
+[] 
+size<maxbuffer & port_env.id.2.receive_data?vl -> CONTROL_state ( id, size,cache,top,bot,vl_env )
+[] 
+size==1 & internal.3 -> CONTROL_state ( id, size,cache,top,bot,vl_env )
+[] 
+size>0 & internal.4 -> CONTROL_state ( id, size,cache,top,bot,vl_env )
+[] 
+size>1 & internal.5 -> CONTROL_state ( id, size,cache,top,bot,vl_env )
+[] 
+size==0 & internal.6 -> CONTROL_state ( id, size,cache,top,bot,vl_env )
+
+CELL_state( id,val) =get_val.id!val->CELL_state ( id, val ) 
+ []set_val.id?vl -> CELL_state ( id, vl) 
+
+
+STM_CELL(id) = Init_Cell(id)
+Init_Cell(id) = (port_cell.id.read_I->get_val.id?val->port_cell.id.read_O!val ->Init_Cell(id)) [] (port_cell.id.write_I?vl->port_cell.id.write_O ->set_val.id!vl ->Init_Cell(id) )
+
+STM_CONTROL(id) = Init_Control(id)
+Init_Control(id) = (port_env.id.1.retrieve_data_I->get_cache.id?cache->port_env.id.1.retrieve_data_O!cache ->Read(id)) [] ( port_env.id.2.receive_data?vl ->set_vl_env.id!vl ->Write(id) )
+Read(id) = (internal.3-> set_size.id!0 ->Init_Control(id)) [] (internal.5-> get_bot.id?bot->port_control.id.bot.read_I->port_control.id.bot.read_O?vl ->set_cache.id!vl ->get_bot.id?bot->set_bot.id!(bot%maxring) +1 ->get_size.id?size->set_size.id!(size -1) %maxbuffer ->Init_Control(id) )
+Write(id) = (internal.4-> get_vl_env.id?vl_env->get_top.id?top->port_control.id.top.write_I!vl_env->port_control.id.top.write_O ->get_size.id?size->set_size.id!(size %maxbuffer)+1 ->get_top.id?top->set_top.id!(top%maxring)+1 ->Init_Control(id)) [] (internal.6-> get_vl_env.id?vl_env->set_cache.id!vl_env ->set_size.id!1 ->Init_Control(id) )
+
+
+CELL(id) =STM_CELL(id) [|{|get_val.id,set_val.id,internal|}|]
+CELL_state(id,0) \{|get_val,set_val,internal |}
+
+CONTROL(id) =STM_CONTROL(id) [|{|get_size.id,set_size.id,get_cache.id,set_cache.id,get_top.id,set_top.id,get_bot.id,set_bot.id,get_vl_env.id,set_vl_env.id,port_env.id.2.receive_data,port_env.id.1.retrieve_data_I,internal|}|]
+CONTROL_state(id,0,0,1,1,0) \{|get_size,set_size,get_cache,set_cache,get_top,set_top,get_bot,set_bot,get_vl_env,set_vl_env,internal |}
+
+
+
+inputs_CONTROL0= {|port_control.0.x.op, port_env.0.y.op|op:CONTROL_I, x :index,y: t_id|}  
+inputs_control01= {|port_control.1.x.op, port_env.1.y.op|op:CONTROL_I, x :index,y: t_id|}  
+inputs_cell01= {|port_cell.1.op|op:CELL_I, x :index,y: t_id|}  
+inputs_cell03= {|port_cell.2.op|op:CELL_I, x :index,y: t_id|}  
+inputs_cell02= {|port_cell.3.op|op:CELL_I, x :index,y: t_id|}  
+inputs_CELL0= {|port_cell.0.op|op:CELL_I, x :index,y: t_id|}  
+
+ outputs_CONTROL0= {|port_control.0.x.op, port_env.0.y.op|op:CONTROL_O, x :index,y: t_id|} 
+ outputs_control01= {|port_control.1.x.op, port_env.1.y.op|op:CONTROL_O, x :index,y: t_id|} 
+ outputs_cell01= {|port_cell.1.op|op:CELL_O, x :index,y: t_id|} 
+ outputs_cell03= {|port_cell.2.op|op:CELL_O, x :index,y: t_id|} 
+ outputs_cell02= {|port_cell.3.op|op:CELL_O, x :index,y: t_id|} 
+ outputs_CELL0= {|port_cell.0.op|op:CELL_O, x :index,y: t_id|} 
+
+-- do componente 
+inter_cell01_cell03 = cell01 ||| cell03
+
+inputs_inter_cell01_cell03= union(inputs_cell01, inputs_cell03) 
+outputs_inter_cell01_cell03= union(outputs_cell01, outputs_cell03) 
+
+-- ctr_inter_cell01_cell03 = <cell01 ||| cell03,{port_cell.1,port_cell.2}{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}{{(port_cell.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_cell.2,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O})}}
+
+-- ctr_inter_inter_cell01_cell03_cell02 = <inter_cell01_cell03 ||| cell02,{port_cell.1,port_cell.2,port_cell.3}{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}{{(port_cell.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_cell.2,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_cell.3,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O})}}
+inter_inter_cell01_cell03_cell02 = inter_cell01_cell03 ||| cell02
+
+inputs_inter_inter_cell01_cell03_cell02= union(inputs_inter_cell01_cell03, inputs_cell02) 
+outputs_inter_inter_cell01_cell03_cell02= union(outputs_inter_cell01_cell03, outputs_cell02) 
+
+-- ctr_inter_inter_inter_cell01_cell03_cell02_control01 = <inter_inter_cell01_cell03_cell02 ||| control01,{port_cell.1,port_cell.2,port_cell.3,port_control.1,port_env.1}{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}{{(port_cell.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_cell.2,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_cell.3,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_control.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_env.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O})}}
+inter_inter_inter_cell01_cell03_cell02_control01 = inter_inter_cell01_cell03_cell02 ||| control01
+
+inputs_inter_inter_inter_cell01_cell03_cell02_control01= union(inputs_inter_inter_cell01_cell03_cell02, inputs_control01) 
+outputs_inter_inter_inter_cell01_cell03_cell02_control01= union(outputs_inter_inter_cell01_cell03_cell02, outputs_control01) 
+
+ processcomp = (inter_inter_inter_cell01_cell03_cell02_control01)
+ [|{|port_cell.1,port_control.1.1|}|]
+BFIO_INIT(port_cell.1,port_control.1.1)
+ 
+
+--- ctr_processcomp = <inter_inter_inter_cell01_cell03_cell02_control01[|{port_cell.1,port_control.1.1}|]BFIO_INIT(port_cell.1,port_control.1.1),{port_cell.2,port_cell.3,port_control.1,port_env.1}{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}{{(port_cell.2,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_cell.3,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_control.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_env.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O})}}
+processcomp_com = processcomp
+[|{|port_cell.3,port_control.1.2|}|]
+BFIO_INIT(port_cell.3,port_control.1.2)
+ 
+
+ ---ctr_processcomp_com = <processcomp[|{port_cell.3,port_control.1.2}|]BFIO_INIT(port_cell.3,port_control.1.2),{port_cell.2,port_control.1,port_env.1}{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}{{(port_cell.2,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_control.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_env.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O})}}
+processcomp_com_com = processcomp_com
+[|{|port_control.1.3,port_cell.2|}|]
+BFIO_INIT(port_control.1.3,port_cell.2)
+ 
+
+ ---ctr_processcomp_com_com = <processcomp_com[|{port_control.1.3,port_cell.2}|]BFIO_INIT(port_control.1.3,port_cell.2),{port_control.1,port_env.1}{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}{{(port_control.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O}),(port_env.1,{receive_data_I,receive_data_O,retrieve_data_I,retrieve_data_O,write_I,write_O,read_I,read_O})}}
+
+-- funcDefault 
+transparent wbisim
+channel tag_port_cell :operation
+
+
+temp_protocolo_CELL_port_cell  = CELL0[[port_cell.0<- tag_port_cell]]\{|internal,get_val,set_val|} 
+
+processoWBS_CELL_port_cell =  wbisim(temp_protocolo_CELL_port_cell) 
+channel tag_port_control :operation
+
+
+temp_protocolo_CONTROL_port_control_1  = CONTROL0[[port_control.0.1<- tag_port_control]]\{|internal,port_env,get_size,set_size,get_cache,set_cache,get_top,set_top,get_bot,set_bot,get_vl_env,set_vl_env,port_control.0.2 , port_control.0.3|} 
+
+temp_protocolo_CONTROL_port_control_2  = CONTROL0[[port_control.0.2<- tag_port_control]]\{|internal,port_env,get_size,set_size,get_cache,set_cache,get_top,set_top,get_bot,set_bot,get_vl_env,set_vl_env,port_control.0.1 , port_control.0.3|} 
+
+temp_protocolo_CONTROL_port_control_3  = CONTROL0[[port_control.0.3<- tag_port_control]]\{|internal,port_env,get_size,set_size,get_cache,set_cache,get_top,set_top,get_bot,set_bot,get_vl_env,set_vl_env,port_control.0.1 , port_control.0.2|} 
+
+processoWBS_CONTROL_1 =  wbisim(temp_protocolo_CONTROL_port_control_1) 
+processoWBS_CONTROL_2 =  wbisim(temp_protocolo_CONTROL_port_control_2) 
+processoWBS_CONTROL_3 =  wbisim(temp_protocolo_CONTROL_port_control_3) 
+
+
+inputs_CELL =  union ( inputs_cell01  ,union (inputs_cell03  ,inputs_cell02  ))
+inputs_CONTROL = inputs_control01
+
+outputs_CELL =  union ( outputs_cell01  ,union (outputs_cell03  ,outputs_cell02  ))
+outputs_CONTROL = outputs_control01
+
+inputs_all  = union ( inputs_CELL,inputs_CONTROL)
+
+outputs_all = union (outputs_CELL,outputs_CONTROL)
+
+outputsC_CELL  (c) = { x | x <- extensions(c), member(c.x, outputs_CELL)}
+outputsC_CONTROL  (c) = { x | x <- extensions(c), member(c.x, outputs_CONTROL)}
+outputsC_All (c) = { x | x <- extensions(c), member(c.x, outputs_all)}
+BUFFER_All(ci,co, n) = 
+ let 
+B(<>) = [] x : outputsC_All(ci) @ ci.x -> B(<x>) 
+B(s)  =    (co!head(s) -> B(tail(s))) 
+ [] (#s<n & [] x : outputsC_All(ci) @ ci.x -> B(s^<x>)) 
+within B(<>) 
+ 
+BFIO_INIT(c1,c2) = BUFFER_All(c1,c2,1) 
+||| BUFFER_All(c2,c1,1) 
+ 
+
+ 
+
+ include "auxiliar_CONTROL0.csp" 
+
+ include "auxiliar_control01.csp" 
+
+ include "auxiliar_cell01.csp" 
+
+ include "auxiliar_cell03.csp" 
+
+ include "auxiliar_cell02.csp" 
+
+ include "auxiliar_CELL0.csp" 

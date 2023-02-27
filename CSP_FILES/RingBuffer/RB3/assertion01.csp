@@ -1,0 +1,56 @@
+include "arquivo_protocolo0.csp" 
+
+assert InBufferProt_processcomp_com_port_cell_3_port_control_1( port_cell.3 ) :[deterministic [F]] 
+assert InBufferProt_processcomp_com_port_control_1_port_cell_3( port_control.1.2 ) :[deterministic [F]] 
+  
+InBufferProt_processcomp_com_port_cell_3_port_control_1(c) = CIO(PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1[[ x  <- in, y <- out | x  <- inputs_PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1, y  <-outputs_PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1]]) 
+ InBufferProt_processcomp_com_port_control_1_port_cell_3(c) = CIO(PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3[[ x  <- in, y <- out | x  <- inputs_PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3, y  <-outputs_PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3]]) 
+ inputs_PROT_IMP_processcomp_com(c) = inter( inputs_all ,{|c|}) 
+outputs_PROT_IMP_processcomp_com(c) = inter( outputs_all,{|c|}) 
+ 
+inputs_PROT_IMP_processcomp_com_port_cell_3 =  inputs_PROT_IMP_processcomp_com(port_cell.3 )  
+inputs_PROT_IMP_processcomp_com_port_control_1 =  inputs_PROT_IMP_processcomp_com(port_control.1.2 )  
+ 
+PROT_IMP_R_processcomp_com_port_cell_3= rename(PROT_IMP_processcomp_com_port_cell_3 , R_IO_processcomp_com(port_cell.3,port_control.1.2)) 
+PROT_IMP_R_processcomp_com_port_control_1= rename(PROT_IMP_processcomp_com_port_control_1 , R_IO_processcomp_com(port_control.1.2,port_cell.3)) 
+R_IO_processcomp_com(a, b) = seq({(a.x, b.x) | x <- extensions(a), member(a.x, outputs_all )}) 
+inputs_R_IO_processcomp_com(a,b) = inputs_all
+outputs_R_IO_processcomp_com(a,b)  = { b.x | x <- extensions(a), member(a.x, outputs_all)} 
+inputs_R_IO_PROT_IMP_processcomp_com_port_cell_3(a,b)  = inputs_PROT_IMP_processcomp_com_port_cell_3
+inputs_R_IO_PROT_IMP_processcomp_com_port_control_1(a,b)  = inputs_PROT_IMP_processcomp_com_port_control_1
+ 
+outputs_PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1= outputs_R_IO_processcomp_com(port_cell.3,port_control.1.2) 
+outputs_PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3= outputs_R_IO_processcomp_com(port_control.1.2,port_cell.3) 
+ 
+inputs_PROT_IMP_R_processcomp_com(e,r) = replace(inputs_PROT_IMP_processcomp_com(e), r) 
+PROT_IMP_R_PROT_IMP_processcomp_com_port_cell_3_port_control_1= rename(PROT_IMP_processcomp_com_port_cell_3, R_IO_processcomp_com(port_cell.3,port_control.1.2)) 
+PROT_IMP_R_PROT_IMP_processcomp_com_port_control_1_port_cell_3= rename(PROT_IMP_processcomp_com_port_control_1, R_IO_processcomp_com(port_control.1.2,port_cell.3)) 
+ 
+PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1= PROT_IMP_R_PROT_IMP_processcomp_com_port_cell_3_port_control_1
+PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3= PROT_IMP_R_PROT_IMP_processcomp_com_port_control_1_port_cell_3
+ 
+outputs_PROT_IMP_R_processcomp_com(e,r)   = replace(outputs_PROT_IMP_processcomp_com(e), r) 
+DUAL_PROT_IMP_R_PROT_IMP_processcomp_com_port_cell_3= rename(DUAL_PROT_IMP_processcomp_com_port_cell_3,R_IO_processcomp_com(port_cell.3,port_control.1.2))
+DUAL_PROT_IMP_R_PROT_IMP_processcomp_com_port_control_1= rename(DUAL_PROT_IMP_processcomp_com_port_control_1,R_IO_processcomp_com(port_control.1.2,port_cell.3))
+DUAL_PROT_IMP_processcomp_com_port_cell_3= DUAL_PROT_CELL_port_cell(port_cell.3) 
+DUAL_PROT_IMP_processcomp_com_port_control_1= DUAL_PROT_CONTROL_port_control2(port_control.1.2) 
+
+inputs_PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1= inputs_R_IO_PROT_IMP_processcomp_com_port_cell_3(port_cell.3,port_control.1.2) 
+inputs_PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3= inputs_R_IO_PROT_IMP_processcomp_com_port_control_1(port_control.1.2,port_cell.3) 
+PROT_IMP_processcomp_com_port_cell_3= protocolo_CELL_port_cell(port_cell.3) 
+PROT_IMP_processcomp_com_port_control_1= protocolo_CONTROL_port_control2(port_control.1.2) 
+DUAL_PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1 = DUAL_PROT_IMP_R_PROT_IMP_processcomp_com_port_cell_3
+DUAL_PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3= DUAL_PROT_IMP_R_PROT_IMP_processcomp_com_port_control_1
+ 
+ --- assertion 2--------------- 
+ assert PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1:[deadlock free [FD]] 
+assert PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3:[deadlock free [FD]] 
+assert PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1[T= DUAL_PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1
+assert PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3[T= DUAL_PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3
+assert PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1\ outputs_PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1:[divergence free [FD]]
+assert PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3\ outputs_PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3:[divergence free [FD]]
+assert DUAL_PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1[T= PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1
+assert DUAL_PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3[T= PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3
+assert DUAL_PROT_IMP_R_IO_processcomp_com_port_cell_3_port_control_1[F= protocolo_CONTROL_port_control2(port_control.1.2)[port_control.1.2<->port_cell.3]protocolo_CELL_port_cell(port_cell.3)
+assert DUAL_PROT_IMP_R_IO_processcomp_com_port_control_1_port_cell_3[F= protocolo_CELL_port_cell(port_cell.3)[port_cell.3<->port_control.1.2]protocolo_CONTROL_port_control2(port_control.1.2)
+
