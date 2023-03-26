@@ -18,7 +18,7 @@ How to run:
 
 Some alerts should appear but they may be ignored :
 
-
+![error](https://user-images.githubusercontent.com/21693609/227796201-d7977c36-9937-4c05-a850-450828f7c1f8.png)
 
 
 
