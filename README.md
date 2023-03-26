@@ -24,7 +24,7 @@ Some alerts should appear but they may be ignored :
 
 Select  the folder path of fdr.jar
 
-
+![fdr4](https://user-images.githubusercontent.com/21693609/227802594-5a334e14-19ae-487f-888b-d5a3e45afc5d.png)
   
 
 
